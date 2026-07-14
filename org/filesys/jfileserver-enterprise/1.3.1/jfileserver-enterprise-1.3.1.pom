@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.filesys</groupId>
+    <artifactId>jfileserver-enterprise</artifactId>
+    <version>1.3.1</version>
+
+    <licenses>
+        <license>
+            <name>JFileServer Enterprise End User Licence 1.0</name>
+            <url>http://www.filesys.org/licence/jfileserver-enteprise/EULA.txt</url>
+        </license>
+    </licenses>
+
+    <properties>
+        <!-- Compile with Java 11, default is 5 -->
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+
+        <!-- Core JFileServer version -->
+        <jfileserver.version>1.4.1</jfileserver.version>
+        <jfileserver.postgres.version>1.4.1</jfileserver.postgres.version>
+        <jfileserver.h2.version>1.4.1</jfileserver.h2.version>
+
+        <!-- Stage to obfuscate the jfileserver-enterprise jar -->
+        <!-- 'package' or use 'deploy' during debugging -->
+        <proguard.stage>package</proguard.stage>
+
+        <!-- Deploy to GitHub repository in the mvn-repo branch -->
+        <github.global.server>github</github.global.server>
+    </properties>
+
+    <dependencies>
+        <!-- JFileServer library -->
+        <dependency>
+            <groupId>org.filesys</groupId>
+            <artifactId>jfileserver</artifactId>
+            <version>${jfileserver.version}</version>
+        </dependency>
+        
+        <!-- License3J -->
+        <dependency>
+            <groupId>com.javax0.license3j</groupId>
+            <artifactId>license3j</artifactId>
+            <version>3.1.6</version>
+        </dependency>
+
+        <!-- JFileServer PostGres Database Filesystem library -->
+        <dependency>
+            <groupId>org.filesys</groupId>
+            <artifactId>jfileserver-db-postgres</artifactId>
+            <version>${jfileserver.postgres.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JFileServer H2 Database Filesystem library -->
+        <dependency>
+            <groupId>org.filesys</groupId>
+            <artifactId>jfileserver-db-h2</artifactId>
+            <version>${jfileserver.h2.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Build the Jar -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.1</version>
+
+                <executions>
+                    <!-- Build the main jfileserver-enterprise jar -->
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addClasspath>true</addClasspath>
+                                    <classpathPrefix>lib/</classpathPrefix>
+                                    <mainClass>org.filesys.app.EnterpriseFileServer</mainClass>
+                                </manifest>
+                                <manifestEntries>
+                                    <Class-Path>.</Class-Path>
+                                </manifestEntries>
+                            </archive>
+
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Obfuscate the Enterprise JFileServer Jar -->
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.7.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.guardsquare</groupId>
+                        <artifactId>proguard-base</artifactId>
+                        <version>7.9.1</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.guardsquare</groupId>
+                        <artifactId>proguard-core</artifactId>
+                        <version>9.3.2</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <phase>${proguard.stage}</phase>
+                        <goals><goal>proguard</goal></goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <includeDependency>true</includeDependency>
+                    <injar>${project.build.finalName}.${project.packaging}</injar>
+                    <proguardVersion>7.9.1</proguardVersion>
+                    <options>
+                        <option>-ignorewarnings</option>
+                        <option>-keepattributes Exceptions,InnerClasses,Signature</option>
+                        <option>-keepparameternames</option>
+                        <option>-keep public class org.filesys.smb.server.smbv2.createctx.CreateContextType { *; }</option>
+                        <option>-keep public class org.filesys.app.EnterpriseFileServer{public static void main(java.lang.String[]);}</option>
+                        <option>-keep public class org.filesys.smb.server.EnterpriseSMBServer</option>
+                        <option>-keep public class org.filesys.app.EnterpriseXMLServerConfiguration</option>
+                        <option>-keep public class org.filesys.smb.server.smbv2.auth.V2EnterpriseSMBAuthenticator</option>
+                        <option>-keep public class org.filesys.smb.server.smbv2.config.SMBV2ConfigSection { *; }</option>
+                        <option>-keep public class org.filesys.smb.server.smbv2.config.SMBV3ConfigSection { *; }</option>
+                        <option>-keep public class org.filesys.smb.server.smbv2.IOCtl { *; }</option>
+                        <option>-keep public class org.filesys.smb.server.smbv2.FileInfoLevel { *; }</option>
+                        <option>-keep public class org.filesys.smb.server.smbv2.FileInfoClass { *; }</option>
+                        <option>-keep public class org.filesys.smb.server.smbv2.FSInfoLevel { *; }</option>
+                        <option>-keep public class org.filesys.smb.server.smbv2.CreateAction { *; }</option>
+                    </options>
+                    <libs>
+                        <lib>${java.home}/jmods/</lib>
+                    </libs>
+                </configuration>
+            </plugin>
+
+            <!-- Generate the Java docs -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.0.1</version>
+
+                <configuration>
+                    <show>private</show>
+                </configuration>
+            </plugin>
+
+            <!-- Run the application -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.filesys</groupId>
+                        <artifactId>jfileserver-db-postgres</artifactId>
+                        <version>${jfileserver.postgres.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.filesys</groupId>
+                        <artifactId>jfileserver-db-h2</artifactId>
+                        <version>${jfileserver.h2.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.hazelcast</groupId>
+                        <artifactId>hazelcast</artifactId>
+                        <version>5.2.2</version>
+                    </dependency>
+                </dependencies>
+
+                <executions>
+                    <!-- Run JFileServer Enterprise server standalone -->
+                    <execution>
+                        <id>standalone</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <includePluginDependencies>true</includePluginDependencies>
+                            <includeProjectDependencies>true</includeProjectDependencies>
+
+                            <mainClass>org.filesys.app.EnterpriseFileServer</mainClass>
+                            <arguments>
+                                <argument>test/fileSrvConfig.xml</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- Run JFileServer Enterprise server clustered -->
+                    <execution>
+                        <id>cluster</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <includePluginDependencies>true</includePluginDependencies>
+                            <includeProjectDependencies>true</includeProjectDependencies>
+
+                            <mainClass>org.filesys.app.EnterpriseFileServer</mainClass>
+                            <arguments>
+                                <argument>test/fileSrvConfigCluster.xml</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <!-- Run JFileServer Enterprise server with Windows Protocol Test Suite configuration -->
+                    <execution>
+                        <id>testsuite</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <includePluginDependencies>true</includePluginDependencies>
+                            <includeProjectDependencies>true</includeProjectDependencies>
+
+                            <mainClass>org.filesys.app.EnterpriseFileServer</mainClass>
+                            <arguments>
+                                <argument>test/testSuiteSrvConfig.xml</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>net.mgorski.quicktag</groupId>
+                <artifactId>quicktag</artifactId>
+                <version>2.1.5</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>quicktag</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <outputPackage>org.filesys.smb.server.smbv2</outputPackage>
+                </configuration>
+            </plugin>
+
+            <!-- Deploy to local repository -->
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
+                </configuration>
+            </plugin>
+
+            <!-- Deploy to GitHub repository in the mvn-repo branch -->
+            <plugin>
+                <groupId>com.github.github</groupId>
+                <artifactId>site-maven-plugin</artifactId>
+                <version>0.12</version>
+                <configuration>
+                    <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
+                    <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
+                    <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
+                    <branch>refs/heads/mvn-repo</branch>                       <!-- remote branch name -->
+                    <includes><include>**/*</include></includes>
+                    <repositoryName>jfileserver-enterprise-mvn</repositoryName>      <!-- github repo name -->
+                    <repositoryOwner>FileSysOrg</repositoryOwner>    <!-- github username  -->
+                </configuration>
+                <executions>
+                    <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
+                    <execution>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <phase>deploy</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Temporary Staging Repository</name>
+            <url>file://${project.build.directory}/mvn-repo</url>
+        </repository>
+    </distributionManagement>
+
+    <developers>
+        <developer>
+            <name>Gary K. Spencer</name>
+            <email>gk.spencer@filesys.org</email>
+            <organization>FileSys.Org</organization>
+            <organizationUrl>https://www.filesys.org</organizationUrl>
+        </developer>
+    </developers>
+
+</project>
