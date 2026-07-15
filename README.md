@@ -7,7 +7,7 @@ To access the repository in your pom.xml add the following sections :-
         <dependency>
             <groupId>org.filesys</groupId>
             <artifactId>jfileserver-enterprise</artifactId>
-            <version>...</version>
+            <version>1.3.1</version>
         </dependency>
     </dependencies>
 
