@@ -16,9 +16,5 @@ To access the repository in your pom.xml add the following sections :-
         <repository>
             <id>jfileserver-enterprise-mvn-repo</id>
             <url>https://github.com/FileSysOrg/jfileserver-enterprise-mvn/raw/mvn-repo/</url>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
-            </snapshots>
         </repository>
     </repositories>
